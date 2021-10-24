@@ -105,6 +105,7 @@ def image_detection(image_path, network, class_names, class_colors, thresh):
     darknet_image = darknet.make_image(width, height, 3)
 
     image = cv2.imread(image_path)
+    original_h, original_w, original_c = image.shape
     image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image_resized = cv2.resize(image_rgb, (width, height),
                                interpolation=cv2.INTER_LINEAR)
@@ -113,7 +114,7 @@ def image_detection(image_path, network, class_names, class_colors, thresh):
     detections = darknet.detect_image(network, class_names, darknet_image, thresh=thresh)
     darknet.free_image(darknet_image)
     image = darknet.draw_boxes(detections, image_resized, class_colors)
-    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB), detections
+    return cv2.cvtColor(image, cv2.COLOR_BGR2RGB), detections, original_h, original_w
 
 
 def batch_detection(network, images, class_names, class_colors,
@@ -214,7 +215,7 @@ def main():
         else:
             image_name = input("Enter Image Path: ")
         prev_time = time.time()
-        image, detections = image_detection(
+        image, detections, original_h, original_w = image_detection(
             image_name, network, class_names, class_colors, args.thresh
             )
         if args.save_labels:
@@ -222,6 +223,8 @@ def main():
         darknet.print_detections(detections, args.ext_output)
         fps = int(1/(time.time() - prev_time))
         print("FPS: {}".format(fps))
+        original_aspect_img = cv2.resize(image, dsize=(original_w, original_h))
+        cv2.imwrite('test.jpg', original_aspect_img)
         if not args.dont_show:
             cv2.imshow('Inference', image)
             if cv2.waitKey() & 0xFF == ord('q'):

@@ -12,6 +12,8 @@ from ctypes import *
 import math
 import random
 import os
+import collections
+import json
 
 
 class BOX(Structure):
@@ -114,6 +116,28 @@ def print_detections(detections, coordinates=False):
             print("{}: {}%    (left_x: {:.0f}   top_y:  {:.0f}   width:   {:.0f}   height:  {:.0f})".format(label, confidence, x, y, w, h))
         else:
             print("{}: {}%".format(label, confidence))
+
+# def get_classes(data_file):
+#     with open(data_file) as f:
+#         for line in f:
+#             if line.startswith('name'):
+#                 names_line = line
+#     names_path = names.split('=')[1].rstrip('\n')
+#     print(names_path)
+
+def jsonify_detections(detections, class_names):
+    classes_dict = {class_name: 0 for class_name in class_names}
+    # print(classes_dict)
+    classes = []
+    for label, confidence, bbox, in detections:
+        classes.append(label)
+    count = collections.Counter(classes)
+    count = dict(count)
+    classes_dict.update(count)
+    return json.dumps(classes_dict)
+
+    # print(classes)
+
 
 
 def draw_boxes(detections, image, colors):

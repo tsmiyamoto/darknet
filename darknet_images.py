@@ -7,7 +7,7 @@ import time
 import cv2
 import numpy as np
 import darknet
-
+import soracom
 
 def parser():
     parser = argparse.ArgumentParser(description="YOLO Object Detection")
@@ -32,6 +32,8 @@ def parser():
                         help="path to data file")
     parser.add_argument("--thresh", type=float, default=.25,
                         help="remove detections with lower confidence")
+    parser.add_argument("--interval", type=int, default=15,
+                        help="interval time to implement inference")
     return parser.parse_args()
 
 
@@ -191,6 +193,11 @@ def batch_detection_example():
     print(detections)
 
 
+DEVICE_ID = 0
+WIDTH = 800
+HEIGHT = 600
+GST_STR = ('v4l2src device=/dev/video{} ! video/x-raw, width=(int){}, height=(int){} ! videoconvert ! appsink').format(DEVICE_ID, WIDTH, HEIGHT)
+
 def main():
     args = parser()
     check_arguments_errors(args)
@@ -206,30 +213,62 @@ def main():
     images = load_images(args.input)
 
     index = 0
+    cap = cv2.VideoCapture(0)
+    fps = 1 / args.interval
+    read_fps = cap.get(cv2.CAP_PROP_FPS)
+    thresh = read_fps / fps
+
+    frame_counter = thresh
+
     while True:
         # loop asking for new image paths if no list is given
-        if args.input:
-            if index >= len(images):
-                break
-            image_name = images[index]
-        else:
-            image_name = input("Enter Image Path: ")
-        prev_time = time.time()
-        image, detections, original_h, original_w = image_detection(
-            image_name, network, class_names, class_colors, args.thresh
-            )
-        if args.save_labels:
-            save_annotations(image_name, image, detections, class_names)
-        darknet.print_detections(detections, args.ext_output)
-        fps = int(1/(time.time() - prev_time))
-        print("FPS: {}".format(fps))
-        original_aspect_img = cv2.resize(image, dsize=(original_w, original_h))
-        cv2.imwrite('test.jpg', original_aspect_img)
-        if not args.dont_show:
-            cv2.imshow('Inference', image)
-            if cv2.waitKey() & 0xFF == ord('q'):
-                break
-        index += 1
+        # cap = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER)
+        try:
+            # if args.input:
+            #     if index >= len(images):
+            #         break
+            #     image_name = images[index]
+            # else:
+            #     image_name = input("Enter Image Path: ")
+            
+            ret, frame = cap.read()
+
+            frame_counter += 1
+
+            if frame_counter >= thresh:
+
+
+                current_time = time.time()
+                image_name = 'raw/{}.png'.format(current_time)
+                cv2.imwrite(image_name, frame)
+                
+                # prev_time = time.time()
+                image, detections, original_h, original_w = image_detection(
+                    image_name, network, class_names, class_colors, args.thresh
+                    )
+                if args.save_labels:
+                    save_annotations(image_name, image, detections, class_names)
+                # print(detections)
+                # print(class_names)
+                # darknet.print_detections(detections, args.ext_output)
+                detect_json = darknet.jsonify_detections(detections, class_names)
+                soracom.send_data_to_endpoint(detect_json)
+                # fps = int(1/(time.time() - prev_time))
+                # print("FPS: {}".format(fps))
+                original_aspect_img = cv2.resize(image, dsize=(original_w, original_h))
+                cv2.imwrite('detection/{}.png'.format(current_time), original_aspect_img)
+                if not args.dont_show:
+                    cv2.imshow('Inference', image)
+                    if cv2.waitKey() & 0xFF == ord('q'):
+                        break
+                index += 1
+                frame_counter = 0
+            # time.sleep(args.interval)
+
+        except KeyboardInterrupt:
+            cap.release()
+            break
+
 
 
 if __name__ == "__main__":

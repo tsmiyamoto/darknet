@@ -102,8 +102,9 @@ def load_network(config_file, data_file, weights, batch_size=1):
     network = load_net_custom(
         config_file.encode("ascii"),
         weights.encode("ascii"), 0, batch_size)
-    metadata = load_meta(data_file.encode("ascii"))
-    class_names = [metadata.names[i].decode("ascii") for i in range(metadata.classes)]
+    # metadata = load_meta(data_file.encode("ascii"))
+    # class_names = [metadata.names[i].decode("ascii") for i in range(metadata.classes)]
+    class_names = get_classes(data_file)
     colors = class_colors(class_names)
     return network, class_names, colors
 
@@ -117,13 +118,20 @@ def print_detections(detections, coordinates=False):
         else:
             print("{}: {}%".format(label, confidence))
 
-# def get_classes(data_file):
-#     with open(data_file) as f:
-#         for line in f:
-#             if line.startswith('name'):
-#                 names_line = line
-#     names_path = names.split('=')[1].rstrip('\n')
-#     print(names_path)
+def get_classes(data_file):
+    with open(data_file) as f:
+        for line in f:
+            if line.startswith('name'):
+                names_line = line
+    names_path = names_line.split('=')[1].rstrip('\n').strip()
+    print(names_path)
+    # return names_path
+    classes = []
+    with open(names_path) as f:
+        for line in f:
+            classes.append(line.rstrip('\n'))
+
+    return classes
 
 def jsonify_detections(detections, class_names):
     classes_dict = {class_name: 0 for class_name in class_names}

@@ -14,6 +14,9 @@ import random
 import os
 import collections
 import json
+from PIL import Image, ImageFont, ImageDraw
+import numpy as np
+import colorsys
 
 
 class BOX(Structure):
@@ -81,10 +84,11 @@ def class_colors(names):
     Create a dict with one random BGR color for each
     class name
     """
-    return {name: (
-        random.randint(0, 255),
-        random.randint(0, 255),
-        random.randint(0, 255)) for name in names}
+    # return {name: (
+    #     random.randint(0, 255),
+    #     random.randint(0, 255),
+    #     random.randint(0, 255)) for name in names}
+    return {name: tuple(map(lambda k: int(k * 255), (colorsys.hsv_to_rgb(random.random(), 1, 1)))) for name in names}
 
 
 def load_network(config_file, data_file, weights, batch_size=1):
@@ -144,18 +148,29 @@ def jsonify_detections(detections, class_names):
     classes_dict.update(count)
     return json.dumps(classes_dict)
 
-    # print(classes)
-
-
+def cv2_putText_jp(img, text, org, fontFace, fontScale, color):
+    x, y = org
+    imgPIL = Image.fromarray(img)
+    draw = ImageDraw.Draw(imgPIL)
+    fontPIL = ImageFont.truetype(font = fontFace, size = fontScale)
+    w, h = draw.textsize(text, font = fontPIL)
+    draw.text(xy = (x,y-h), text = text, fill = color, font = fontPIL)
+    return np.array(imgPIL, dtype = np.uint8)
 
 def draw_boxes(detections, image, colors):
     import cv2
+    # font = '/usr/share/fonts/truetype/fonts-japanese-gothic.ttf'
+    # font = '/usr/share/fonts/opentype/ipaexfont-gothic/ipaexg.ttf'
+    font = '/usr/share/fonts/opentype/NotoSansJP/NotoSansJP-Bold.otf'
     for label, confidence, bbox in detections:
         left, top, right, bottom = bbox2points(bbox)
         cv2.rectangle(image, (left, top), (right, bottom), colors[label], 1)
-        cv2.putText(image, "{} [{:.2f}]".format(label, float(confidence)),
-                    (left, top - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
-                    colors[label], 2)
+        # cv2.cv2_putText_jp(image, "{} [{:.2f}]".format(label, float(confidence)),
+        #             (left, top - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+        #             colors[label], 2)
+        image = cv2_putText_jp(image, "{} [{:.2f}]".format(label, float(confidence)),
+                    (left, top - 5), font, 20,
+                    colors[label])
     return image
 
 

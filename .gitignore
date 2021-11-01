@@ -64,3 +64,6 @@ uselib
 uselib_track
 darknet
 vcpkg/
+
+detection/*
+raw/*

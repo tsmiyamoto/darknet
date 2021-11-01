@@ -108,7 +108,7 @@ def load_network(config_file, data_file, weights, batch_size=1):
         weights.encode("ascii"), 0, batch_size)
     # metadata = load_meta(data_file.encode("ascii"))
     # class_names = [metadata.names[i].decode("ascii") for i in range(metadata.classes)]
-    class_names = get_classes(data_file)
+    class_names = get_classes_from_txt(data_file)
     colors = class_colors(class_names)
     return network, class_names, colors
 
@@ -121,6 +121,14 @@ def print_detections(detections, coordinates=False):
             print("{}: {}%    (left_x: {:.0f}   top_y:  {:.0f}   width:   {:.0f}   height:  {:.0f})".format(label, confidence, x, y, w, h))
         else:
             print("{}: {}%".format(label, confidence))
+
+def get_classes_from_txt(txt_file):
+    classes = []
+    with open(txt_file) as f:
+        for line in f:
+            classes.append(line)
+
+    return classes
 
 def get_classes(data_file):
     with open(data_file) as f:

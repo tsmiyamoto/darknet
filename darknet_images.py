@@ -26,7 +26,7 @@ def parser():
                         help="display bbox coordinates of detected objects")
     parser.add_argument("--save_labels", action='store_true',
                         help="save detections bbox for each image in yolo format")
-    parser.add_argument("--config_file", default="./cfg/yolov4.cfg",
+    parser.add_argument("--config_file", default="./yolov4.cfg",
                         help="path to config file")
     parser.add_argument("--data_file", default="./classes.txt",
                         help="path to data file")
@@ -255,6 +255,7 @@ def main():
                 # print("FPS: {}".format(fps))
                 original_aspect_img = cv2.resize(image, dsize=(original_w, original_h))
                 cv2.imwrite('detection/{}.png'.format(current_time), original_aspect_img)
+                cv2.imwrite('detection.png'.format(current_time), original_aspect_img)
                 if not args.dont_show:
                     cv2.imshow('Inference', image)
                     if cv2.waitKey() & 0xFF == ord('q'):

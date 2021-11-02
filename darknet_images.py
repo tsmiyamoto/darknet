@@ -18,7 +18,7 @@ def parser():
                         "If no input is given, ")
     parser.add_argument("--batch_size", default=1, type=int,
                         help="number of images to be processed at the same time")
-    parser.add_argument("--weights", default="yolov4.weights",
+    parser.add_argument("--weights", default="yolov4_best.weights",
                         help="yolo weights path")
     parser.add_argument("--dont_show", action='store_true',
                         help="windown inference display. For headless systems")
@@ -213,9 +213,10 @@ def main():
     images = load_images(args.input)
 
     index = 0
-    cap = cv2.VideoCapture(0)
+    cap0 = cv2.VideoCapture(0)
+    cap1 = cv2.VideoCapture(1)
     fps = 1 / args.interval
-    read_fps = cap.get(cv2.CAP_PROP_FPS)
+    read_fps = cap0.get(cv2.CAP_PROP_FPS)
     thresh = read_fps / fps
 
     frame_counter = thresh
@@ -231,19 +232,28 @@ def main():
             # else:
             #     image_name = input("Enter Image Path: ")
             
-            ret, frame = cap.read()
+            ret0, frame0 = cap0.read()
+            ret1, frame1 = cap1.read()
 
             frame_counter += 1
 
             if frame_counter >= thresh:
                 current_time = time.time()
-                image_name = 'raw/{}.png'.format(current_time)
-                cv2.imwrite(image_name, frame)
+                image_name0 = 'raw/camera0/{}.png'.format(current_time)
+                image_name1 = 'raw/camera1/{}.png'.format(current_time)
+                cv2.imwrite(image_name0, frame0)
+                cv2.imwrite(image_name1, frame1)
+
+
                 
                 # prev_time = time.time()
-                image, detections, original_h, original_w = image_detection(
-                    image_name, network, class_names, class_colors, args.thresh
+                image0, detections0, original_h, original_w = image_detection(
+                    image_name0, network, class_names, class_colors, args.thresh
                     )
+                image1, detections1, original_h, original_w = image_detection(
+                    image_name1, network, class_names, class_colors, args.thresh
+                    )
+                detections = detections0 + detections1
                 if args.save_labels:
                     save_annotations(image_name, image, detections, class_names)
                 # print(detections)
@@ -253,9 +263,11 @@ def main():
                 soracom.send_data_to_endpoint(detect_json)
                 # fps = int(1/(time.time() - prev_time))
                 # print("FPS: {}".format(fps))
-                original_aspect_img = cv2.resize(image, dsize=(original_w, original_h))
-                cv2.imwrite('detection/{}.png'.format(current_time), original_aspect_img)
-                cv2.imwrite('detection.png'.format(current_time), original_aspect_img)
+                original_aspect_img0 = cv2.resize(image0, dsize=(original_w, original_h))
+                original_aspect_img1 = cv2.resize(image1, dsize=(original_w, original_h))
+                cv2.imwrite('detection/camera0/{}.png'.format(current_time), original_aspect_img0)
+                cv2.imwrite('detection/camera1/{}.png'.format(current_time), original_aspect_img1)
+                # cv2.imwrite('detection.png'.format(current_time), original_aspect_img)
                 if not args.dont_show:
                     cv2.imshow('Inference', image)
                     if cv2.waitKey() & 0xFF == ord('q'):

@@ -239,8 +239,10 @@ def main():
 
             if frame_counter >= thresh:
                 current_time = time.time()
-                image_name0 = 'raw/camera0/{}.png'.format(current_time)
-                image_name1 = 'raw/camera1/{}.png'.format(current_time)
+                # image_name0 = 'raw/camera0/{}.png'.format(current_time)
+                # image_name1 = 'raw/camera1/{}.png'.format(current_time)
+                image_name0 = 'raw/camera0/current.png'
+                image_name1 = 'raw/camera1/current.png'
                 cv2.imwrite(image_name0, frame0)
                 cv2.imwrite(image_name1, frame1)
 

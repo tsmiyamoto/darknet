@@ -279,7 +279,8 @@ def main():
             # time.sleep(args.interval)
 
         except KeyboardInterrupt:
-            cap.release()
+            cap0.release()
+            cap1.release()
             break
 
 

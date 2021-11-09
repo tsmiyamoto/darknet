@@ -213,10 +213,9 @@ def main():
     images = load_images(args.input)
 
     index = 0
-    cap0 = cv2.VideoCapture(0)
-    cap1 = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     fps = 1 / args.interval
-    read_fps = cap0.get(cv2.CAP_PROP_FPS)
+    read_fps = cap.get(cv2.CAP_PROP_FPS)
     thresh = read_fps / fps
 
     frame_counter = thresh
@@ -232,30 +231,19 @@ def main():
             # else:
             #     image_name = input("Enter Image Path: ")
             
-            ret0, frame0 = cap0.read()
-            ret1, frame1 = cap1.read()
+            ret, frame = cap.read()
 
             frame_counter += 1
 
             if frame_counter >= thresh:
                 current_time = time.time()
-                # image_name0 = 'raw/camera0/{}.png'.format(current_time)
-                # image_name1 = 'raw/camera1/{}.png'.format(current_time)
-                image_name0 = 'raw/camera0/current.png'
-                image_name1 = 'raw/camera1/current.png'
-                cv2.imwrite(image_name0, frame0)
-                cv2.imwrite(image_name1, frame1)
-
-
+                image_name = 'raw/{}.png'.format(current_time)
+                cv2.imwrite(image_name, frame)
                 
                 # prev_time = time.time()
-                image0, detections0, original_h, original_w = image_detection(
-                    image_name0, network, class_names, class_colors, args.thresh
+                image, detections, original_h, original_w = image_detection(
+                    image_name, network, class_names, class_colors, args.thresh
                     )
-                image1, detections1, original_h, original_w = image_detection(
-                    image_name1, network, class_names, class_colors, args.thresh
-                    )
-                detections = detections0 + detections1
                 if args.save_labels:
                     save_annotations(image_name, image, detections, class_names)
                 # print(detections)
@@ -265,11 +253,9 @@ def main():
                 soracom.send_data_to_endpoint(detect_json)
                 # fps = int(1/(time.time() - prev_time))
                 # print("FPS: {}".format(fps))
-                original_aspect_img0 = cv2.resize(image0, dsize=(original_w, original_h))
-                original_aspect_img1 = cv2.resize(image1, dsize=(original_w, original_h))
-                cv2.imwrite('detection/camera0/{}.png'.format(current_time), original_aspect_img0)
-                cv2.imwrite('detection/camera1/{}.png'.format(current_time), original_aspect_img1)
-                # cv2.imwrite('detection.png'.format(current_time), original_aspect_img)
+                original_aspect_img = cv2.resize(image, dsize=(original_w, original_h))
+                cv2.imwrite('detection/{}.png'.format(current_time), original_aspect_img)
+                cv2.imwrite('detection.png'.format(current_time), original_aspect_img)
                 if not args.dont_show:
                     cv2.imshow('Inference', image)
                     if cv2.waitKey() & 0xFF == ord('q'):
@@ -279,8 +265,7 @@ def main():
             # time.sleep(args.interval)
 
         except KeyboardInterrupt:
-            cap0.release()
-            cap1.release()
+            cap.release()
             break
 
 

@@ -67,3 +67,5 @@ vcpkg/
 
 detection/*
 raw/*
+
+!resource/*

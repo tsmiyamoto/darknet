@@ -126,7 +126,7 @@ def get_classes_from_txt(txt_file):
     classes = []
     with open(txt_file) as f:
         for line in f:
-            classes.append(line)
+            classes.append(line.rstrip('\n'))
 
     return classes
 

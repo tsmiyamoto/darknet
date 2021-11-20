@@ -30,7 +30,7 @@ def parser():
                         help="path to config file")
     parser.add_argument("--data_file", default="./classes.txt",
                         help="path to data file")
-    parser.add_argument("--thresh", type=float, default=.25,
+    parser.add_argument("--thresh", type=float, default=.90,
                         help="remove detections with lower confidence")
     parser.add_argument("--interval", type=int, default=60,
                         help="interval time to implement inference")

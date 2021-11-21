@@ -5,7 +5,7 @@ def send_data_to_endpoint(detection_json):
     endpoint = 'http://uni.soracom.io'
     try: 
         response = requests.post(endpoint, data=detection_json, headers=headers, timeout=(3.0))
-        print(response.json())
+        print(response)
     except requests.exceptions.Timeout as e:
         print(e)
         pass

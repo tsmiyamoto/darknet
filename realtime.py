@@ -2,6 +2,7 @@ import argparse
 import os
 import glob
 import random
+import codecs
 
 from numpy.core.numeric import full
 import darknet
@@ -115,7 +116,7 @@ def video_cap():
         image, detections, original_h, original_w = image_detection(
         frame, network, class_names, class_colors, args.thresh, width, height
         )
-
+        print(time.time(), detections, file=codecs.open('detections.txt', 'a', 'utf-8'))
         # darknet.print_detections(detections, args.ext_output)
 
         try:
